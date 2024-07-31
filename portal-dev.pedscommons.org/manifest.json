@@ -1,0 +1,229 @@
+{
+  "notes": [
+    "This is the dev environment manifest",
+    "That's all I have to say"
+  ],
+  "versions": {
+    "fence": "quay.io/pcdc/fence:1.14.0",
+    "arborist": "quay.io/pcdc/arborist:2024.07",
+    "peregrine": "quay.io/pcdc/peregrine:1.3.7",
+    "sheepdog": "quay.io/pcdc/sheepdog:1.5.8",
+    "pcdcanalysistools": "quay.io/pcdc/pcdcanalysistools:1.8.9",
+    "amanuensis": "quay.io/pcdc/amanuensis:2.18.1",
+    "guppy": "quay.io/pcdc/guppy:1.8.3",
+    "aws-es-proxy": "abutaha/aws-es-proxy:0.8",
+    "fluentd": "fluent/fluentd-kubernetes-daemonset:v1.15.3-debian-cloudwatch-1.0",
+    "portal": "quay.io/pcdc/windmill:1.29.0_temp",
+    "revproxy": "quay.io/cdis/nginx:1.17.6-ctds-1.0.1",
+    "manifestservice": "quay.io/cdis/manifestservice:2024.08",
+    "wts": "quay.io/cdis/workspace-token-service:2024.08",
+    "sower": "quay.io/cdis/sower:2024.08"
+  },
+  "scaling": {
+    "fence": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "arborist": {
+      "strategy": "auto",
+      "min": 2,
+      "max": 3
+    },
+    "peregrine": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "sheepdog": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "guppy": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "portal": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "revproxy": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    },
+    "sower": {
+      "strategy": "auto",
+      "min": 1,
+      "max": 2
+    }
+  },
+  "arborist": {
+    "deployment_version": "2"
+  },
+  "jupyterhub": {
+    "enabled": "no"
+  },
+  "sower" : [
+    {
+      "name": "pelican-export",
+      "action": "export",
+      "container": {
+        "name": "job-task",
+        "image": "quay.io/pcdc/pelican:1.3.3_export",
+        "pull_policy": "Always",
+        "env": [
+          {
+            "name": "DICTIONARY_URL",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "manifest-global",
+                "key": "dictionary_url"
+              }
+            }
+          },
+          {
+            "name": "GEN3_HOSTNAME",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "manifest-global",
+                "key": "hostname"
+              }
+            }
+          },
+          {
+            "name": "ROOT_NODE",
+            "value": "subject"
+          }
+        ],
+        "volumeMounts": [
+          {
+            "name": "pelican-creds-volume",
+            "readOnly": true,
+            "mountPath": "/pelican-creds.json",
+            "subPath": "config.json"
+          },
+          {
+            "name": "peregrine-creds-volume",
+            "readOnly": true,
+            "mountPath": "/peregrine-creds.json",
+            "subPath": "creds.json"
+          },
+          {
+            "name": "indexd-creds-volume",
+            "readOnly": true,
+            "mountPath": "/indexd-creds.json",
+            "subPath": "creds.json"
+          }
+        ],
+        "cpu-limit": "1",
+        "memory-limit": "2Gi"
+      },
+      "volumes": [
+        {
+          "name": "pelican-creds-volume",
+          "secret": {
+            "secretName": "pelicanservice-g3auto"
+          }
+        },
+        {
+          "name": "peregrine-creds-volume",
+          "secret": {
+            "secretName": "peregrine-creds"
+          }
+        },
+        {
+          "name": "indexd-creds-volume",
+          "secret": {
+            "secretName": "indexd-creds"
+          }
+        }
+      ],
+      "restart_policy": "Never"
+    },
+    {
+      "name": "pelican-import",
+      "action": "import",
+      "container": {
+        "name": "job-task",
+        "image": "quay.io/pcdc/pelican:test_pfb-import_import_2023-09-05T11_00_40-05_00",
+        "pull_policy": "Always",
+        "env": [
+          {
+            "name": "DICTIONARY_URL",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "manifest-global",
+                "key": "dictionary_url"
+              }
+            }
+          },
+          {
+            "name": "GEN3_HOSTNAME",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "manifest-global",
+                "key": "hostname"
+              }
+            }
+          }
+        ],
+        "volumeMounts": [
+          {
+            "name": "sheepdog-creds-volume",
+            "readOnly": true,
+            "mountPath": "/sheepdog-creds.json",
+            "subPath": "creds.json"
+          }
+        ],
+        "cpu-limit": "1",
+        "memory-limit": "2Gi"
+      },
+      "volumes": [
+        {
+          "name": "sheepdog-creds-volume",
+          "secret": {
+            "secretName": "sheepdog-creds"
+          }
+        }
+      ],
+      "restart_policy": "Never"
+    }
+  ],
+  "global": {
+    "environment": "devplanetv1",
+    "hostname": "portal-dev.pedscommons.org",
+    "revproxy_arn": "arn:aws:acm:us-east-1:009732147623:certificate/8f00318a-90dd-4601-9059-244274cedd08",
+    "dictionary_url": "https://pcdc-dev-dictionaries.s3.amazonaws.com/pcdc-schema-dev-20241008.json",
+    "portal_app": "gitops",
+    "kube_bucket": "kube-pcdc-dev-gen3",
+    "logs_bucket": "logs-pcdc-dev-gen3",
+    "sync_from_dbgap": "False",
+    "useryaml_s3path": "s3://pcdc-compose-docs/user-dev.yaml",
+    "netpolicy": "on",
+    "tier_access_level": "granular",
+    "tier_access_limit": "5",
+    "authz_entity_name": "subject",
+    "uwsgi-timeout": "600",
+    "karpenter": true,
+    "es7": true
+  },
+  "canary": {
+    "default": 0
+  },
+  "guppy": {
+    "indices": [
+      {
+        "index": "pcdc",
+        "type": "subject"
+      }
+    ],
+    "config_index": "pcdc-array-config",
+    "auth_filter_field": "auth_resource_path",
+    "missing_data_variables": ["sex"] 
+  }
+}
+
