@@ -1,4 +1,0 @@
-{
-    "cedar-ingestion": "30 13,19 * * *",
-    "metadata-aggregate-sync": "30 14,20 * * *"
-}
